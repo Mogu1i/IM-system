@@ -1,0 +1,14 @@
+server_ip: "127.0.0.1"
+server_port: 8888
+ws_path: "/ws"
+max_connections: 10000
+heartbeat_timeout: "8m"
+
+persist_batch_size: 20
+persist_interval: "1m"
+persist_queue_size: 1000
+
+mysql_dsn: "root:123456@tcp(127.0.0.1:3306)/im?parseTime=true&loc=Local"
+redis_addr: "127.0.0.1:6379"
+redis_password: ""
+redis_db: 0
