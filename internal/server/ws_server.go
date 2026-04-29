@@ -1,10 +1,12 @@
-package main
+package server
 
 import (
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
+
+	"IM-System/internal/persistence"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -16,7 +18,7 @@ var wsUpgrader = websocket.Upgrader{
 
 func (this *Server) Start() error {
 	go this.ListenMessager()
-	StartPersistenceWorker(this.ctx, this.Store, this.PersistQueue, this.PersistBatchSize, this.PersistInterval)
+	persistence.StartPersistenceWorker(this.ctx, this.Store, this.PersistQueue, this.PersistBatchSize, this.PersistInterval)
 
 	router := gin.Default()
 	router.GET(this.WSPath, this.HandleWebSocket)
