@@ -1,12 +1,14 @@
-package main
+package persistence
 
 import (
 	"context"
 	"fmt"
 	"time"
+
+	"IM-System/internal/models"
 )
 
-func StartPersistenceWorker(ctx context.Context, store MessageStore, queue <-chan ChatMessage, batchSize int, flushInterval time.Duration) {
+func StartPersistenceWorker(ctx context.Context, store models.MessageStore, queue <-chan models.ChatMessage, batchSize int, flushInterval time.Duration) {
 	if store == nil || queue == nil || batchSize <= 0 {
 		return
 	}
@@ -15,7 +17,7 @@ func StartPersistenceWorker(ctx context.Context, store MessageStore, queue <-cha
 		ticker := time.NewTicker(flushInterval)
 		defer ticker.Stop()
 
-		batch := make([]ChatMessage, 0, batchSize)
+		batch := make([]models.ChatMessage, 0, batchSize)
 		flush := func() {
 			if len(batch) == 0 {
 				return

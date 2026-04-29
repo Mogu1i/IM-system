@@ -1,10 +1,15 @@
-package main
+package server
 
 import (
 	"context"
 	"fmt"
 	"sync"
 	"time"
+
+	"IM-System/internal/config"
+	"IM-System/internal/models"
+	"IM-System/internal/pool"
+	"IM-System/internal/redisstore"
 )
 
 type Server struct {
@@ -19,28 +24,28 @@ type Server struct {
 	//消息广播的channel
 	Message chan string
 
-	Pool             *ConnectionPool
-	PersistQueue     chan ChatMessage
-	Store            MessageStore
+	Pool             *pool.ConnectionPool
+	PersistQueue     chan models.ChatMessage
+	Store            models.MessageStore
 	PersistBatchSize int
 	PersistInterval  time.Duration
 
-	Redis            *RedisStore
+	Redis            *redisstore.RedisStore
 	HeartbeatTimeout time.Duration
 
 	ctx context.Context
 }
 
 //创建一个server的接口
-func NewServer(cfg Config, store MessageStore, redisStore *RedisStore) *Server {
+func NewServer(cfg config.Config, store models.MessageStore, redisStore *redisstore.RedisStore) *Server {
 	server := &Server{
 		Ip:                cfg.ServerIp,
 		Port:              cfg.ServerPort,
 		WSPath:            cfg.WSPath,
 		OnlineMap:         make(map[string]*User),
 		Message:           make(chan string, 128),
-		Pool:              NewConnectionPool(cfg.MaxConnections),
-		PersistQueue:      make(chan ChatMessage, cfg.PersistQueueSize),
+		Pool:              pool.NewConnectionPool(cfg.MaxConnections),
+		PersistQueue:      make(chan models.ChatMessage, cfg.PersistQueueSize),
 		Store:             store,
 		PersistBatchSize:  cfg.PersistBatchSize,
 		PersistInterval:   cfg.PersistInterval,
@@ -92,7 +97,7 @@ func (this *Server) broadcast(user *User, msg string, persist bool) {
 		return
 	}
 
-	this.EnqueueMessage(ChatMessage{
+	this.EnqueueMessage(models.ChatMessage{
 		FromUser:  user.Name,
 		ToUser:    "",
 		Content:   msg,
@@ -100,7 +105,7 @@ func (this *Server) broadcast(user *User, msg string, persist bool) {
 	})
 }
 
-func (this *Server) EnqueueMessage(msg ChatMessage) {
+func (this *Server) EnqueueMessage(msg models.ChatMessage) {
 	if this.PersistQueue == nil || this.Store == nil {
 		return
 	}
@@ -115,7 +120,7 @@ func (this *Server) SetOnline(user *User) {
 	if this.Redis == nil {
 		return
 	}
-	if err := this.Redis.SetOnline(this.ctx, user); err != nil {
+	if err := this.Redis.SetOnline(this.ctx, user.Name, user.Addr); err != nil {
 		fmt.Println("redis set online err:", err)
 	}
 }
@@ -124,7 +129,7 @@ func (this *Server) RefreshOnline(user *User) {
 	if this.Redis == nil {
 		return
 	}
-	if err := this.Redis.RefreshOnline(this.ctx, user); err != nil {
+	if err := this.Redis.RefreshOnline(this.ctx, user.Name, user.Addr); err != nil {
 		fmt.Println("redis refresh online err:", err)
 	}
 }
@@ -133,7 +138,7 @@ func (this *Server) SetOffline(user *User) {
 	if this.Redis == nil {
 		return
 	}
-	if err := this.Redis.SetOffline(this.ctx, user); err != nil {
+	if err := this.Redis.SetOffline(this.ctx, user.Name); err != nil {
 		fmt.Println("redis set offline err:", err)
 	}
 }

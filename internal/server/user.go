@@ -1,9 +1,11 @@
-package main
+package server
 
 import (
 	"strings"
 	"sync"
 	"time"
+
+	"IM-System/internal/models"
 
 	"github.com/gorilla/websocket"
 )
@@ -147,7 +149,7 @@ func (this *User) DoMessage(msg string) {
 			return
 		}
 		remoteUser.SendMsg(this.Name + "对您说:" + content)
-		this.server.EnqueueMessage(ChatMessage{
+		this.server.EnqueueMessage(models.ChatMessage{
 			FromUser:  this.Name,
 			ToUser:    remoteName,
 			Content:   content,

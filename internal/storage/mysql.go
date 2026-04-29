@@ -1,9 +1,11 @@
-package main
+package storage
 
 import (
 	"context"
 	"database/sql"
 	"time"
+
+	"IM-System/internal/models"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -31,7 +33,7 @@ func NewMySQLStore(dsn string) (*MySQLStore, error) {
 	return &MySQLStore{db: db}, nil
 }
 
-func (s *MySQLStore) SaveMessages(ctx context.Context, messages []ChatMessage) error {
+func (s *MySQLStore) SaveMessages(ctx context.Context, messages []models.ChatMessage) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err

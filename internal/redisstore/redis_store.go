@@ -1,4 +1,4 @@
-package main
+package redisstore
 
 import (
 	"context"
@@ -29,18 +29,18 @@ func NewRedisStore(addr string, password string, db int, ttl time.Duration) (*Re
 	return &RedisStore{client: client, onlineTTL: ttl}, nil
 }
 
-func (r *RedisStore) SetOnline(ctx context.Context, user *User) error {
-	key := onlineKey(user.Name)
-	return r.client.Set(ctx, key, user.Addr, r.onlineTTL).Err()
+func (r *RedisStore) SetOnline(ctx context.Context, name string, addr string) error {
+	key := onlineKey(name)
+	return r.client.Set(ctx, key, addr, r.onlineTTL).Err()
 }
 
-func (r *RedisStore) RefreshOnline(ctx context.Context, user *User) error {
-	key := onlineKey(user.Name)
-	return r.client.Set(ctx, key, user.Addr, r.onlineTTL).Err()
+func (r *RedisStore) RefreshOnline(ctx context.Context, name string, addr string) error {
+	key := onlineKey(name)
+	return r.client.Set(ctx, key, addr, r.onlineTTL).Err()
 }
 
-func (r *RedisStore) SetOffline(ctx context.Context, user *User) error {
-	key := onlineKey(user.Name)
+func (r *RedisStore) SetOffline(ctx context.Context, name string) error {
+	key := onlineKey(name)
 	return r.client.Del(ctx, key).Err()
 }
 
